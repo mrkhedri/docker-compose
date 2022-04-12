@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  redis:
+    build:
+      context: ./redis
+    image: redis:6.2-alpine-configured
+    container_name: redis
+    privileged: true
+    restart: always
+    ports:
+      - '6379:6379'
+    command: sh -c "./init.sh"
+    volumes:
+      - redis:/data:rw
+    networks:
+      - share-network
+
+volumes:
+  redis:
+    driver: local
+
+networks:
+  share-network:
+    external: true

@@ -1,0 +1,58 @@
+version: '3'
+services:
+  nifi:
+    build:
+      context: nifi/
+      args:
+        NIFI_VERSION: $NIFI_VERSION
+    image: apache/nifi:$NIFI_VERSION-python
+    networks:
+      - share-network
+    container_name: nifi
+    ports:
+     # - 8181:8080 # Unsecured HTTP Web Port
+       - 8443:8443 # Secured HTTPS Web Port
+       - 9998:9998 # websocket
+    environment:
+      - NIFI_ANALYTICS_PREDICT_ENABLED=true
+      - NIFI_WEB_HTTP_HOST=nifi
+      - NIFI_WEB_HTTPS_HOST=nifi
+      - NIFI_WEB_PROXY_HOST=nifi:8443,127.0.0.1:8443,nifi,127.0.0.1
+      - TZ=Asia/Tehran
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=$SINGLE_USER_CREDENTIALS_PASSWORD 
+      - NIFI_SENSITIVE_PROPS_KEY=$NIFI_SENSITIVE_PROPS_KEY
+      - NIFI_JVM_HEAP_INIT=4g
+      - NIFI_JVM_HEAP_MAX=6g
+    volumes:
+      - ./nifi/conf/archive:/opt/nifi/nifi-current/conf/archive
+      # - ./nifi/conf/flowfile:/opt/nifi/nifi-current/conf/flowfile_repository
+      - ./nifi/content:/opt/nifi/nifi-current/content_repository
+      - ./nifi/provenance:/opt/nifi/nifi-current/provenance_repository
+      - ./nifi/cert:/opt/nifi/nifi-current/cert
+      - ./nifi/workspace:/home/nifi/workspace
+      - ./nifi/drivers:/opt/nifi/drivers
+      - ./nifi/archive:/home/nifi/archive
+      - ./nifi/logs:/opt/nifi/nifi-current/logs
+      - ./nifi/data:/opt/nifi/data
+
+  nifi-registry:
+    container_name: nifi-registry
+    image: apache/nifi-registry:1.14.0
+    networks:
+      - dataflow-net
+    ports:
+      - 18080:18080
+    environment:
+     - TZ=Asia/Tehran
+     - NIFI_REGISTRY_WEB_HTTP_HOST=nifi-registry
+     - NIFI_REGISTRY_WEB_PROXY_HOST=nifi-registry:18080,127.0.0.1:18080,nifi-registry
+    volumes:
+     - ./nifi-registry/conf:/opt/nifi-registry/nifi-registry-current/conf/
+     - ./nifi-registry/logs:/opt/nifi-registry/nifi-registry-current/logs
+     - ./nifi-registry/flow-storage:/opt/nifi-registry/nifi-registry-current/flow_storage
+     - ./nifi-registry/database:/opt/nifi-registry/nifi-registry-current/database
+
+networks:
+  share-network:
+    external: true
