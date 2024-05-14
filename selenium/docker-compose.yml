@@ -10,8 +10,6 @@ services:
     environment:
       - SE_NODE_MAX_SESSIONS=10
       - SE_NODE_OVERRIDE_MAX_SESSIONS=true
-    volumes:
-      - ./nifi/workspace/selenium/downloads:/home/seluser/Downloads
 
 networks:
   share-network:
