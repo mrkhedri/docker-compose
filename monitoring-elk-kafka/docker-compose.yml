@@ -12,8 +12,8 @@ services:
       ELASTIC_USERNAME: $ELASTICSEARCH_USERNAME
       ELASTIC_PASSWORD: $ELASTICSEARCH_PASSWORD
       http.cors.enabled: "true"
-      http.cors.allow-origin: "*"
-      xpack.security.enabled: "true"
+      http.cors.allow-origin: "'*'"
+      # xpack.security.enabled: "true"
     labels:
       co.elastic.metrics/module: "elasticsearch"
       co.elastic.metrics/hosts: "http://elasticsearch:9200"
@@ -73,8 +73,8 @@ services:
     image: docker.elastic.co/logstash/logstash:$LOGSTASH_INDEXER_VERSION-integration-kafka
     container_name: logstash-indexer
     volumes:
-      - ./logstash-indexer/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
-      - ./logstash-indexer/pipeline:/usr/share/logstash/pipeline:ro,Z
+      - ./logstash-indexer/config/logstash.yml:/usr/share/logstash/config/logstash.yml:rw,Z
+      - ./logstash-indexer/pipeline:/usr/share/logstash/pipeline:rw,Z
     ports:
       - 5144:5044
       - 51000:50000/tcp
@@ -82,6 +82,7 @@ services:
       - 9700:9600
     environment:
       LS_JAVA_OPTS: -Xms256m -Xmx256m
+      xpack.monitoring.enabled: "false"
       xpack.monitoring.elasticsearch.url: "elasticsearch:9200"
       xpack.monitoring.elasticsearch.username: $ELASTICSEARCH_USERNAME
       xpack.monitoring.elasticsearch.password: $ELASTICSEARCH_PASSWORD

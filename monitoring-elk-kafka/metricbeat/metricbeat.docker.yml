@@ -9,10 +9,10 @@ metricbeat.config:
     # Reload module configs as they change:
     reload.enabled: false
 
-metricbeat.autodiscover:
-  providers:
-    - type: docker # also it can be kubernetes
-      hints.enabled: true # we enabled hints based autodiscover feature (read here https://www.elastic.co/guide/en/beats/metricbeat/current/configuration-autodiscover-hints.html)
+# metricbeat.autodiscover:
+#   providers:
+#     - type: docker # also it can be kubernetes
+#       hints.enabled: false # we enabled hints based autodiscover feature (read here https://www.elastic.co/guide/en/beats/metricbeat/current/configuration-autodiscover-hints.html)
 
 metricbeat.modules:
 - module: docker
@@ -23,7 +23,7 @@ metricbeat.modules:
   enabled: true
   fields:
     kafka_topic: docker-container
-    charisma_field: "data-engineers-❤️"
+    charisma_field: "data-engineers"
   fields_under_root: true
 - module: docker
   metricsets:
@@ -33,7 +33,7 @@ metricbeat.modules:
   enabled: true
   fields:
     kafka_topic: docker-cpu
-    charisma_field: "we-are-here-👌"
+    charisma_field: "we-are-here"
   fields_under_root: true
 
 output.kafka:
