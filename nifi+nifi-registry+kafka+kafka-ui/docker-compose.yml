@@ -41,22 +41,22 @@ services:
       - ./nifi/logs:/opt/nifi/nifi-current/logs
       - ./nifi/data:/opt/nifi/data
 
-  nifi-registry:
-    container_name: nifi-registry
-    image: apache/nifi-registry:1.26.0
-    networks:
-      - share-network
-    ports:
-      - 18080:18080
-    environment:
-     - TZ=Asia/Tehran
-     - NIFI_REGISTRY_WEB_HTTP_HOST=nifi-registry
-     - NIFI_REGISTRY_WEB_PROXY_HOST=nifi-registry:18080,127.0.0.1:18080,nifi-registry
-    volumes:
-     - ./nifi-registry/conf:/opt/nifi-registry/nifi-registry-current/conf/
-     - ./nifi-registry/logs:/opt/nifi-registry/nifi-registry-current/logs
-     - ./nifi-registry/flow-storage:/opt/nifi-registry/nifi-registry-current/flow_storage
-     - ./nifi-registry/database:/opt/nifi-registry/nifi-registry-current/database
+  # nifi-registry:
+  #   container_name: nifi-registry
+  #   image: apache/nifi-registry:1.26.0
+  #   networks:
+  #     - share-network
+  #   ports:
+  #     - 18080:18080
+  #   environment:
+  #    - TZ=Asia/Tehran
+  #    - NIFI_REGISTRY_WEB_HTTP_HOST=nifi-registry
+  #    - NIFI_REGISTRY_WEB_PROXY_HOST=nifi-registry:18080,127.0.0.1:18080,nifi-registry
+  #   volumes:
+  #    - ./nifi-registry/conf:/opt/nifi-registry/nifi-registry-current/conf/
+  #    - ./nifi-registry/logs:/opt/nifi-registry/nifi-registry-current/logs
+  #    - ./nifi-registry/flow-storage:/opt/nifi-registry/nifi-registry-current/flow_storage
+  #    - ./nifi-registry/database:/opt/nifi-registry/nifi-registry-current/database
 
   kafka:
     image: bitnami/kafka:3.4.1
