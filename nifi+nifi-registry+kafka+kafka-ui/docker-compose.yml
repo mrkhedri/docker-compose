@@ -1,0 +1,109 @@
+version: '3'
+services:
+  nifi:
+    build:
+      context: nifi/
+      args:
+        NIFI_VERSION: 1.26.0
+    image: apache/nifi:1.26.0
+    networks:
+      - share-network
+    container_name: nifi
+    command: >
+      bash -c "chmod -x ./conf/flow.xml.gz
+      && chmod -x ./conf/flow.json.gz"
+    ports:
+      - 8443:8443
+      - 9998:9998
+    environment:
+      - NIFI_ANALYTICS_PREDICT_ENABLED=true
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=sdafASRdDRsadfasfsrWFASDawrwqafdc
+      - NIFI_SENSITIVE_PROPS_KEY=TestData
+      - NIFI_WEB_PROXY_HOST=nifi:8443,127.0.0.1:8443,nifi,127.0.0.1
+      - NIFI_WEB_HTTP_HOST=nifi
+      - NIFI_WEB_HTTPS_HOST=nifi
+      - TZ=Asia/Tehran
+      - NIFI_JVM_HEAP_INIT=4g
+      - NIFI_JVM_HEAP_MAX=6g
+      - NIFI_REMOTE_INPUT_SECURE=false
+      - JAVA_TOOL_OPTIONS=-Dcalcite.default.charset=utf-8
+      - NIFI_CONTENT_CLAIM_MAX_APPENDABLE_SIZE=200KB
+      - NIFI_CONTENT_REPOSITORY_ARCHIVE_ENABLED=false
+    volumes:
+      - ./nifi/conf/archive:/opt/nifi/nifi-current/conf/archive
+      - ./nifi/content:/opt/nifi/nifi-current/content_repository
+      - ./nifi/provenance:/opt/nifi/nifi-current/provenance_repository
+      - ./nifi/cert:/opt/nifi/nifi-current/cert
+      - ./nifi/workspace:/home/nifi/workspace
+      - ./nifi/drivers:/opt/nifi/drivers
+      - ./nifi/archive:/home/nifi/archive
+      - ./nifi/logs:/opt/nifi/nifi-current/logs
+      - ./nifi/data:/opt/nifi/data
+
+  nifi-registry:
+    container_name: nifi-registry
+    image: apache/nifi-registry:1.26.0
+    networks:
+      - share-network
+    ports:
+      - 18080:18080
+    environment:
+     - TZ=Asia/Tehran
+     - NIFI_REGISTRY_WEB_HTTP_HOST=nifi-registry
+     - NIFI_REGISTRY_WEB_PROXY_HOST=nifi-registry:18080,127.0.0.1:18080,nifi-registry
+    volumes:
+     - ./nifi-registry/conf:/opt/nifi-registry/nifi-registry-current/conf/
+     - ./nifi-registry/logs:/opt/nifi-registry/nifi-registry-current/logs
+     - ./nifi-registry/flow-storage:/opt/nifi-registry/nifi-registry-current/flow_storage
+     - ./nifi-registry/database:/opt/nifi-registry/nifi-registry-current/database
+
+  kafka:
+    image: bitnami/kafka:3.4.1
+    container_name: kafka
+    command:
+      - 'sh'
+      - '-c'
+      - '/opt/bitnami/scripts/kafka/setup.sh && kafka-storage.sh format --config "$${KAFKA_CONF_FILE}" --cluster-id "lkorDA4qT6W1K_dk0LHvtg" --ignore-formatted  && /opt/bitnami/scripts/kafka/run.sh' # Kraft specific initialise
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      # Start Kraft Setup (Kafka as Controller - no Zookeeper)
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LOG_DIRS=/tmp/logs
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,INTERNAL://:9094
+      # End Kraft Specific Setup
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092,INTERNAL://kafka:9094
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_NUM_PARTITIONS=4
+    ports:
+      - "0.0.0.0:9092:9092"
+      - "9094:9094"
+    networks:
+      - share-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: "lkorDA4qT6W1K_dk0LHvtg"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9094 # kafka host:port
+      AUTH_TYPE: "LOGIN_FORM"
+      SPRING_SECURITY_USER_NAME: admin
+      SPRING_SECURITY_USER_PASSWORD: changeme
+    networks:
+      - share-network
+    depends_on:
+      - kafka
+
+     
+
+networks:
+  share-network:
+    driver: bridge
