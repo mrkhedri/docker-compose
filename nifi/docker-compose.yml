@@ -1,32 +1,31 @@
 version: '3'
 services:
-  nifi:
-    build:
-      context: nifi/
-      args:
-        NIFI_VERSION: $NIFI_VERSION
-    image: apache/nifi:$NIFI_VERSION-python
-    networks:
-      - share-network
-    container_name: nifi
+  nifi2:
+    image: apache/nifi:2.5.0
+    container_name: nifi2
+    command: >
+      bash -c "chmod -x ./conf/flow.xml.gz
+      && chmod -x ./conf/flow.json.gz"
     ports:
-     # - 8181:8080 # Unsecured HTTP Web Port
-       - 8443:8443 # Secured HTTPS Web Port
-       - 9998:9998 # websocket
+      # - 8181:8080 # Unsecured HTTP Web Port
+      - 8443:8443 # Secured HTTPS Web Port
     environment:
       - NIFI_ANALYTICS_PREDICT_ENABLED=true
-      - NIFI_WEB_HTTP_HOST=nifi
-      - NIFI_WEB_HTTPS_HOST=nifi
-      - NIFI_WEB_PROXY_HOST=nifi:8443,127.0.0.1:8443,nifi,127.0.0.1
-      - TZ=Asia/Tehran
       - SINGLE_USER_CREDENTIALS_USERNAME=admin
-      - SINGLE_USER_CREDENTIALS_PASSWORD=$SINGLE_USER_CREDENTIALS_PASSWORD 
-      - NIFI_SENSITIVE_PROPS_KEY=$NIFI_SENSITIVE_PROPS_KEY
+      - SINGLE_USER_CREDENTIALS_PASSWORD=password123456
+      - NIFI_SENSITIVE_PROPS_KEY=Test123456789
+      - NIFI_WEB_PROXY_HOST=nifi2:8443,127.0.0.1:8443,nifi2,127.0.0.1
+      - NIFI_WEB_HTTP_HOST=nifi2
+      - NIFI_WEB_HTTPS_HOST=nifi2
+      - TZ=Asia/Tehran
       - NIFI_JVM_HEAP_INIT=4g
       - NIFI_JVM_HEAP_MAX=6g
+      - NIFI_REMOTE_INPUT_SECURE=false
+      - JAVA_TOOL_OPTIONS=-Dcalcite.default.charset=utf-8
+      - NIFI_CONTENT_CLAIM_MAX_APPENDABLE_SIZE=200KB
+      - NIFI_CONTENT_REPOSITORY_ARCHIVE_ENABLED=false
     volumes:
       - ./nifi/conf/archive:/opt/nifi/nifi-current/conf/archive
-      # - ./nifi/conf/flowfile:/opt/nifi/nifi-current/conf/flowfile_repository
       - ./nifi/content:/opt/nifi/nifi-current/content_repository
       - ./nifi/provenance:/opt/nifi/nifi-current/provenance_repository
       - ./nifi/cert:/opt/nifi/nifi-current/cert
@@ -36,23 +35,22 @@ services:
       - ./nifi/logs:/opt/nifi/nifi-current/logs
       - ./nifi/data:/opt/nifi/data
 
-  nifi-registry:
-    container_name: nifi-registry
-    image: apache/nifi-registry:1.14.0
-    networks:
-      - dataflow-net
-    ports:
-      - 18080:18080
-    environment:
-     - TZ=Asia/Tehran
-     - NIFI_REGISTRY_WEB_HTTP_HOST=nifi-registry
-     - NIFI_REGISTRY_WEB_PROXY_HOST=nifi-registry:18080,127.0.0.1:18080,nifi-registry
-    volumes:
-     - ./nifi-registry/conf:/opt/nifi-registry/nifi-registry-current/conf/
-     - ./nifi-registry/logs:/opt/nifi-registry/nifi-registry-current/logs
-     - ./nifi-registry/flow-storage:/opt/nifi-registry/nifi-registry-current/flow_storage
-     - ./nifi-registry/database:/opt/nifi-registry/nifi-registry-current/database
+  # nifi-registry2:
+  #   container_name: nifi-registry2
+  #   image: apache/nifi-registry:2.5.0
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - dataflow-net
+  #     - share-network
+  #   ports:
+  #     - 18081:18080
+  #   environment:
+  #    - TZ=Asia/Tehran
+  #    - NIFI_REGISTRY_WEB_HTTP_HOST=nifi-registry2
+  #    - NIFI_REGISTRY_WEB_PROXY_HOST=nifi-registry2:18080,127.0.0.1:18080,nifi-registry2
+  #   volumes:
+  #    - ./nifi-registry/logs:/opt/nifi-registry/nifi-registry-current/logs
+  #    - ./nifi-registry/flow-storage:/opt/nifi-registry/nifi-registry-current/flow_storage
+  #    - ./nifi-registry/database:/opt/nifi-registry/nifi-registry-current/database
 
-networks:
-  share-network:
-    external: true
